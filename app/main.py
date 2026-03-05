@@ -46,15 +46,14 @@ def health():
 
 @app.post("/seed-admin")
 def seed_admin(db: Session = Depends(get_db)):
-    from passlib.context import CryptContext
+    from app.security import hash_password
     existing = db.query(models.Usuario).filter(models.Usuario.email == "admin@maysi.com").first()
     if existing:
         return {"message": "Admin ya existe"}
-    pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user = models.Usuario(
         nombre="Admin",
         email="admin@maysi.com",
-        password_hash=pwd.hash("admin123"),
+        password_hash=hash_password("admin123"),
         cargo="Administrador",
         rol="admin",
         avatar="AD",
