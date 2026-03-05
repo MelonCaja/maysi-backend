@@ -55,8 +55,10 @@ def seed_admin(db: Session = Depends(get_db)):
         nombre="Admin",
         email="admin@maysi.com",
         password_hash=pwd.hash("admin123"),
+        cargo="Administrador",
         rol="admin",
-        activo=True,
+        avatar="AD",
+        bloqueado=False,
     )
     db.add(user)
     db.commit()
