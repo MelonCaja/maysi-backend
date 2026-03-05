@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 import os
 from app.routers import auth, rendiciones, usuarios, push_tokens
 from app.database import engine, Base
+from app.deps import get_db
 from app import models  # registra todos los modelos
 
 
@@ -40,3 +42,22 @@ app.include_router(push_tokens.router)
 @app.get("/")
 def health():
     return {"status": "ok", "app": "Maysi API"}
+
+
+@app.post("/seed-admin")
+def seed_admin(db: Session = Depends(get_db)):
+    from passlib.context import CryptContext
+    existing = db.query(models.Usuario).filter(models.Usuario.email == "admin@maysi.com").first()
+    if existing:
+        return {"message": "Admin ya existe"}
+    pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    user = models.Usuario(
+        nombre="Admin",
+        email="admin@maysi.com",
+        password_hash=pwd.hash("admin123"),
+        rol="admin",
+        activo=True,
+    )
+    db.add(user)
+    db.commit()
+    return {"message": "Admin creado", "email": "admin@maysi.com", "password": "admin123"}
